@@ -4,15 +4,15 @@ import (
 	"net/http"
 	"simple-rest-api/initializers"
 	"simple-rest-api/models"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 func RestaurantCreate(c *gin.Context) {
-	// get data of request
-
+	// 1. get data of request
 	// validate input
-	var input models.Restaurant
+	var input models.RestaurantCreate
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -21,9 +21,8 @@ func RestaurantCreate(c *gin.Context) {
 		return
 	}
 
-	// create a restaurant
-
-	restaurant := models.Restaurant{Name: input.Name, Addr: input.Addr}
+	// 2.create a restaurant
+	restaurant := models.RestaurantCreate{Name: input.Name, Addr: input.Addr}
 
 	result := initializers.DB.Create(&restaurant)
 
@@ -41,8 +40,10 @@ func RestaurantCreate(c *gin.Context) {
 func RestaurantGet(c *gin.Context) {
 	// get data
 	var data []models.Restaurant
+
 	initializers.DB.Find(&data)
 	// do something
+
 	c.JSON(http.StatusOK, gin.H{
 		"restaurant": data,
 	})
@@ -50,11 +51,11 @@ func RestaurantGet(c *gin.Context) {
 
 func RestaurantGetByID(c *gin.Context) {
 	// get id from url
+	id, _ := strconv.Atoi(c.Param("id"))
 
 	// do something
 	var data models.Restaurant
-
-	if err := initializers.DB.Where("id = ?", c.Param("id")).First(&data).Error; err != nil {
+	if err := initializers.DB.Where("id = ?", id).First(&data).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "restaurant not found",
 		})
@@ -69,40 +70,38 @@ func RestaurantGetByID(c *gin.Context) {
 func RestaurantUpdate(c *gin.Context) {
 	// find the data were updating
 
-	var data models.Restaurant
-
-	if err := initializers.DB.Where("id = ?", c.Param("id")).First(&data).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "restaurant not found",
-		})
-		return
-	}
+	var (
+		data   models.Restaurant
+		update models.RestaurantUpdate
+	)
 
 	// get data off request
-
-	var updated struct {
-		Name string
-		Addr string
-	}
 	// validate input
-
-	if err := c.ShouldBindJSON(&updated); err != nil {
+	if err := c.ShouldBindJSON(&update); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
+	// validate input
+	if err := initializers.DB.Where("id = ?", c.Param("id")).First(&data).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "restaurant not found",
+		})
+		return
+	} // no need but its ok to have
+
 	// update the data
-	initializers.DB.Model(&data).Updates(models.Restaurant{Name: updated.Name, Addr: updated.Addr})
+	initializers.DB.Model(&data).Updates(models.Restaurant{Name: update.Name, Addr: update.Addr})
+
 	// respond with it
 	c.JSON(http.StatusOK, gin.H{
-		"restaurant": updated,
+		"restaurant": data,
 	})
 }
 
 func RestaurantDelete(c *gin.Context) {
-	// id := c.Param("id")
 	var delete models.Restaurant
 	if err := initializers.DB.Where("id = ?", c.Param("id")).First(&delete).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
