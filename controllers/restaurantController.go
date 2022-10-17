@@ -10,10 +10,19 @@ import (
 
 func RestaurantCreate(c *gin.Context) {
 	// get data of request
+
+	// validate input
 	var input models.Restaurant
-	c.ShouldBind(&input)
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
 
 	// create a restaurant
+
 	restaurant := models.Restaurant{Name: input.Name, Addr: input.Addr}
 
 	result := initializers.DB.Create(&restaurant)
@@ -41,10 +50,16 @@ func RestaurantGet(c *gin.Context) {
 
 func RestaurantGetByID(c *gin.Context) {
 	// get id from url
-	id := c.Param("id")
+
 	// do something
 	var data models.Restaurant
-	initializers.DB.Find(&data, id)
+
+	if err := initializers.DB.Where("id = ?", c.Param("id")).First(&data).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "restaurant not found",
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"restaurant": data,
@@ -52,18 +67,32 @@ func RestaurantGetByID(c *gin.Context) {
 }
 
 func RestaurantUpdate(c *gin.Context) {
-	// get id from url
-	id := c.Param("id")
+	// find the data were updating
+
+	var data models.Restaurant
+
+	if err := initializers.DB.Where("id = ?", c.Param("id")).First(&data).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "restaurant not found",
+		})
+		return
+	}
 
 	// get data off request
+
 	var updated struct {
 		Name string
 		Addr string
 	}
-	c.ShouldBind(&updated)
-	// find the data were updating
-	var data models.Restaurant
-	initializers.DB.First(&data, id)
+	// validate input
+
+	if err := c.ShouldBindJSON(&updated); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
 	// update the data
 	initializers.DB.Model(&data).Updates(models.Restaurant{Name: updated.Name, Addr: updated.Addr})
 	// respond with it
@@ -73,13 +102,19 @@ func RestaurantUpdate(c *gin.Context) {
 }
 
 func RestaurantDelete(c *gin.Context) {
-	id := c.Param("id")
+	// id := c.Param("id")
 	var delete models.Restaurant
+	if err := initializers.DB.Where("id = ?", c.Param("id")).First(&delete).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
 
-	initializers.DB.Delete(&models.Restaurant{}, id)
+	initializers.DB.Delete(&delete)
 
 	c.JSON(http.StatusOK, gin.H{
-		"restaurant": delete,
+		"restaurant": true,
 	})
 
 }
