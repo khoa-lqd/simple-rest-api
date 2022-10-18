@@ -22,7 +22,8 @@ func RestaurantCreate(c *gin.Context) {
 	}
 
 	// 2.create a restaurant
-	restaurant := models.RestaurantCreate{Name: input.Name, Addr: input.Addr}
+
+	restaurant := models.Restaurant{Name: input.Name, Addr: input.Addr}
 
 	result := initializers.DB.Create(&restaurant)
 
@@ -31,9 +32,10 @@ func RestaurantCreate(c *gin.Context) {
 			"error": result.Error,
 		})
 	}
+
 	// return it
 	c.JSON(http.StatusOK, gin.H{
-		"restaurant": restaurant,
+		"restaurant": input,
 	})
 }
 
@@ -84,7 +86,7 @@ func RestaurantUpdate(c *gin.Context) {
 		return
 	}
 
-	// validate input
+	// check input
 	if err := initializers.DB.Where("id = ?", c.Param("id")).First(&data).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "restaurant not found",
