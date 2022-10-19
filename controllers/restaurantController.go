@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"simple-rest-api/helpers"
 	"simple-rest-api/initializers"
 	"simple-rest-api/models"
 	"strconv"
@@ -34,9 +35,7 @@ func RestaurantCreate(c *gin.Context) {
 	}
 
 	// return it
-	c.JSON(http.StatusOK, gin.H{
-		"restaurant": input,
-	})
+	c.JSON(http.StatusOK, helpers.NewSuccessResponse("created"))
 }
 
 func RestaurantGet(c *gin.Context) {
@@ -46,9 +45,7 @@ func RestaurantGet(c *gin.Context) {
 	initializers.DB.Find(&data)
 	// do something
 
-	c.JSON(http.StatusOK, gin.H{
-		"restaurant": data,
-	})
+	c.JSON(http.StatusOK, helpers.NewSuccessResponse(data))
 }
 
 func RestaurantGetByID(c *gin.Context) {

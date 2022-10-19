@@ -5,6 +5,8 @@ import (
 	"simple-rest-api/controllers"
 	"simple-rest-api/initializers"
 
+	bugsnaggin "github.com/bugsnag/bugsnag-go-gin"
+	"github.com/bugsnag/bugsnag-go/v2"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,6 +16,16 @@ func main() {
 	initializers.ConnectToDB()
 
 	router := gin.Default()
+
+	router.Use(bugsnaggin.AutoNotify(bugsnag.Configuration{
+		// Your Bugsnag project API key, required unless set as environment
+		// variable $BUGSNAG_API_KEY
+		APIKey: "82789214141a730634bce15cb236141f",
+		// The import paths for the Go packages containing your source files
+	}))
+
+	bugsnag.Notify(fmt.Errorf("Test error"))
+
 	router.POST("/restaurants", controllers.RestaurantCreate)
 
 	router.GET("/restaurants", controllers.RestaurantGet)
